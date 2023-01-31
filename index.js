@@ -44,12 +44,21 @@ let notes = [
 // ------------------------------------------------------------------
 
 
-
+const cors = require('cors');
 const express = require('express');
 const app = express();
-const PORT = 3003;
 
+const requestLogger = (request, response, next) => {
+  console.log('Method: ', request.method);
+  console.log('Path: ', request.path);
+  console.log('Body: ', request.body);
+  console.log('--------------------');
+  next();
+};
+
+app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 const generateId = () => {
     const maxId = (notes.length > 0) 
@@ -82,10 +91,7 @@ app.get('/api/notes/:id', (request, response) => {
 app.delete('/api/notes/:id', (request, response) => {
     const id = Number(request.params.id);
     notes = notes.filter(note => note.id !== id);
-
-    console.log(notes);
-
-    response.status(204).end();
+    response.status(200).send(request.params.id);
 });
 
 // add note to notes
@@ -104,6 +110,22 @@ app.post('/api/notes', (request, response) => {
     notes = notes.concat(newNote);
     response.json(newNote);
 });
+
+// edit note
+app.put('/api/notes/:id', (request, response) => {
+  const newNoteData = request.body;
+  const id = Number(request.params.id);
+  notes = notes.map(note => 
+    (note.id === id) ? newNoteData : note
+  );
+  response.json(newNoteData);
+});
+
+
+
+//############# run server #############
+
+const PORT = 3001;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}...`);
