@@ -41,24 +41,16 @@ let notes = [
       "id": 8
     }
 ];
-// ------------------------------------------------------------------
+//#########################################################
 
 
 const cors = require('cors');
 const express = require('express');
 const app = express();
 
-const requestLogger = (request, response, next) => {
-  console.log('Method: ', request.method);
-  console.log('Path: ', request.path);
-  console.log('Body: ', request.body);
-  console.log('--------------------');
-  next();
-};
-
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+app.use(express.static('build'));
 
 const generateId = () => {
     const maxId = (notes.length > 0) 
@@ -67,9 +59,11 @@ const generateId = () => {
     return maxId + 1;
 };
 
+/*
 app.get('/', (request, response) => {
-    response.send('<h1>Hello World</h1>');
+    response.send('<h1>Test</h1>');
 });
+*/
 
 // get all notes
 app.get('/api/notes', (request, response) => {
