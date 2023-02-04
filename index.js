@@ -1,49 +1,4 @@
-// test db object:
-let notes = [
-    {
-      "id": 1,
-      "content": "HTML is easy",
-      "important": true
-    },
-    {
-      "id": 2,
-      "content": "Browser can execute only JavaScript",
-      "important": true
-    },
-    {
-      "id": 3,
-      "content": "GET and POST are the most important methods of HTTP protocol",
-      "important": true
-    },
-    {
-      "content": "hello",
-      "important": false,
-      "id": 4
-    },
-    {
-      "content": "henlo",
-      "important": false,
-      "id": 5
-    },
-    {
-      "content": "lololo",
-      "important": false,
-      "id": 6
-    },
-    {
-      "content": "TESTTEST",
-      "important": false,
-      "id": 7
-    },
-    {
-      "content": "PRomiseStest",
-      "important": true,
-      "id": 8
-    }
-];
-//#########################################################
-
-
+require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const app = express();
@@ -52,40 +7,39 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('build'));
 
-const generateId = () => {
-    const maxId = (notes.length > 0) 
-        ? Math.max(...notes.map(note => note.id)) 
-        : 0;
-    return maxId + 1;
-};
+const Note = require('./models/note');
 
-/*
-app.get('/', (request, response) => {
-    response.send('<h1>Test</h1>');
-});
-*/
+//-------------------------------------------------------------------
 
 // get all notes
 app.get('/api/notes', (request, response) => {
-    response.json(notes);
+  Note
+    .find({})
+    .then(result => response.json(result));
 });
 
 // get note at id
-app.get('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const note = notes.find(note => note.id === id);
-    if (note) {
+app.get('/api/notes/:id', (request, response, next) => {
+  Note
+    .findById(request.params.id)
+    .then(note => {
+      if (note) {
         response.json(note);
-    } else {
+      } else {
         response.status(404).end();
-    };
+      };
+    })
+    .catch(error => next(error));
 });
 
 // delete note at id
-app.delete('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id);
-    notes = notes.filter(note => note.id !== id);
-    response.status(200).send(request.params.id);
+app.delete('/api/notes/:id', (request, response, next) => {
+    Note
+      .findByIdAndRemove(request.params.id)
+      .then(result => {
+        response.status(200).send(request.params.id)
+      })
+      .catch(error => next(error));
 });
 
 // add note to notes
@@ -96,30 +50,47 @@ app.post('/api/notes', (request, response) => {
             error: 'content missing'
         });
     };
-    const newNote = {
+    const note = new Note({
         content: body.content,
         important: body.important || false,
-        id: generateId()
-    };
-    notes = notes.concat(newNote);
-    response.json(newNote);
+    });
+    note.save().then(savedNote => response.json(savedNote));
 });
 
 // edit note
-app.put('/api/notes/:id', (request, response) => {
+app.put('/api/notes/:id', (request, response, next) => {
   const newNoteData = request.body;
-  const id = Number(request.params.id);
-  notes = notes.map(note => 
-    (note.id === id) ? newNoteData : note
-  );
-  response.json(newNoteData);
+  const note = {
+    content: newNoteData.content,
+    important: newNoteData.important
+  };
+  Note
+    .findByIdAndUpdate(request.params.id, note, { new: true })
+    .then(updatedNote => response.json(updatedNote))
+    .catch(error => next(error));
 });
 
+//-------------------------------------------------------------------
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' });
+};
+app.use(unknownEndpoint);
+
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  };
+  next(error);
+};
+app.use(errorHandler);
 
 
 //############# run server #############
 
-const PORT = 3001;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}...`);
