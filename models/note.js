@@ -1,18 +1,5 @@
 const mongoose = require('mongoose');
 
-const url = process.env.MONGO_URI;
-
-console.log('connecting to MongoDB at: ', url);
-
-mongoose.set('strictQuery', false);
-
-mongoose
-    .connect(url)
-    .then(result => 
-        console.log('connected to MongoDB'))
-    .catch(error => 
-        console.log('error connecting to MongoDB: ', error.message));
-
 const noteSchema = new mongoose.Schema({
     content: { type: String, minLength: 2, required: true },
     important: Boolean,

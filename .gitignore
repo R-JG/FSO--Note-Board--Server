@@ -2,9 +2,4 @@
 
 /build
 
-/requests
-
 .env
-
-
-mongo-example.js
