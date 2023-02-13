@@ -1,10 +1,12 @@
 const notesRouter = require('express').Router();
-const Note = require('../models/note');
+const Note = require('../models/Note');
+const User = require('../models/User');
 
 
 notesRouter.get('/', (request, response) => {
     Note
         .find({})
+        .populate('user')
         .then(result => response.json(result));
 });
 
@@ -37,13 +39,22 @@ notesRouter.post('/', (request, response, next) => {
             error: 'content missing'
         });
     };
-    const note = new Note({
-        content: body.content,
-        important: body.important || false,
-    });
-    note
-        .save()
-        .then(savedNote => response.json(savedNote))
+    User
+        .findById(body.userId)
+        .then(user => {
+            const note = new Note({
+                content: body.content,
+                important: body.important || false,
+                user: user._id
+            });
+            note
+                .save()
+                .then(savedNote => {
+                    user.notes = user.notes.concat(savedNote._id);
+                    user.save().then(() => response.json(savedNote));
+                })
+                .catch(error => next(error));
+        })
         .catch(error => next(error));
 });
   
