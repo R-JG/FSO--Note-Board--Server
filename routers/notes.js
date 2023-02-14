@@ -7,9 +7,8 @@ const User = require('../models/User');
 
 const getTokenFrom = request => {
     const authorization = request.get('authorization');
-    if (authorization && authorization.startsWith('bearer ')) {
-        console.log(authorization.replace('bearer ', ''));
-        return authorization.replace('bearer ', '');
+    if (authorization && authorization.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '');
     };
     return null;
 };

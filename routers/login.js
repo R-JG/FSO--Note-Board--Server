@@ -22,7 +22,7 @@ loginRouter.post('/', (request, response) => {
                         username: user.username,
                         id: user._id
                     };
-                    const token = jwt.sign(userForToken, config.JWT_SECRET);
+                    const token = jwt.sign(userForToken, config.JWT_SECRET, { expiresIn: 60*60 });
                     response.json({
                         token,
                         name: user.name,
