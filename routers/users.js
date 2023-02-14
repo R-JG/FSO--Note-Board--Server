@@ -10,14 +10,14 @@ usersRouter.get('/', (request, response) => {
 });
 
 usersRouter.post('/', (request, response) => {
-    const { name, userName, password } = request.body;
+    const { name, username, password } = request.body;
     const saltRounds = 10;
     bcrypt
         .hash(password, saltRounds)
         .then(passwordHash => {
             const user = new User({
                 name,
-                userName,
+                username,
                 passwordHash
             });
             user
